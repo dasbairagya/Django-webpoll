@@ -32,9 +32,13 @@ Once `pip` has finished downloading the dependencies:
 
 
 ## Walkthrough
-Navigate to `http://127.0.0.1:8000/polls/`.
+Navigate to `http://127.0.0.1:8000/polls/` and
 `http://127.0.0.1:8000/polls/`
 username and password both is `admin`
+
+![](polls/public/img/django-admin.png)
+![](polls/public/img/vote.png)
+![](polls/public/img/poll-results.png)
 
 
 ## Tests
