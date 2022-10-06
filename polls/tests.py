@@ -74,3 +74,20 @@ class QuestionIndexViewTests(TestCase):
         create_question(questionname="Past question 2.", days=-10)
         response=self.client.get(reverse('webpoll:home'))
         self.assertQuerysetEqual(response.context['recent_question_list'], ['<question: Past question 2.>', '<question: Past question 1.>'])
+        
+class QuestionDetailViewTests(TestCase):
+    def test_future_question(self):
+        """ The detail view of a question with a pubdate in the future returns a 404 not found. """
+        #Write implementation code here
+        future_question = create_question(questionname='Future question.', days=5)
+        url = reverse('webpoll:detail', args=(future_question.id,))
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)
+        
+    def test_past_question(self):
+        """ The detail view of a question with a pubdate in the past displays the question's text. """
+        #Write implementation code here
+        past_question = create_question(questionname='Past Question.', days=-5)
+        url = reverse('webpoll:detail', args=(past_question.id,))
+        response = self.client.get(url)
+        self.assertContains(response, past_question.questionname)
