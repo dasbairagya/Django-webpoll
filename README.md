@@ -12,8 +12,8 @@ $ cd Django-webpoll
 Create a virtual environment to install dependencies in and activate it:
 
 ```sh
-$ virtualenv2 --no-site-packages env
-$ source env/bin/activate
+$ python -m venv venv
+$ venv\Scripts\activate
 ```
 
 Then install the dependencies:
