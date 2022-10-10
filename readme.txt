@@ -41,4 +41,9 @@ cd test_project
 (venv)> python manage.py runserve
 ```
 
+Step 10 - Creating the Django App
+```
+(venv)> python manage.py startapp poll
+```
+
 source: https://www.stanleyulili.com/django/how-to-install-django-on-windows/#step-8---creating-the-django-project
