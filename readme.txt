@@ -1,5 +1,5 @@
 ##How to Install Django on Windows: Step by Step Guide
- #Table of Contents
+#Table of Contents
 #Introduction
 #Prerequisites
 
@@ -40,3 +40,5 @@ Step 9 - Running the Development Server
 cd test_project
 (venv)> python manage.py runserve
 ```
+
+source: https://www.stanleyulili.com/django/how-to-install-django-on-windows/#step-8---creating-the-django-project
