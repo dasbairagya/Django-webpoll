@@ -46,4 +46,11 @@ Step 10 - Creating the Django App
 (venv)> python manage.py startapp poll
 ```
 
+
+Use the sqlmigrate command and pass the app name poll and the migration name 0001 as parameters.
+```
+python manage.py sqlmigrate poll 0001
+```
+
+
 source: https://www.stanleyulili.com/django/how-to-install-django-on-windows/#step-8---creating-the-django-project
