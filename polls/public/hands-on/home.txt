@@ -1,0 +1,449 @@
+EX1:
+
+<!DOCTYPE html>
+<!-- write implementation code here -->
+{% if recent_question_list %}
+    <ul>
+    {% for question in recent_question_list %}
+       <li>{{ question.questionname }}</li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>Questions not available for polling!</p>
+{% endif %}
+
+
+views.py
+
+from django.views import generic
+from django.utils import timezone
+
+from .models import question
+
+class HomeView(generic.ListView):
+    # write implementation code here
+    template_name = 'webpoll/home.html'
+    context_object_name = 'recent_question_list'
+
+    def get_queryset(self):
+       
+        return question.objects.order_by('-pubdate')[:3]
+    #pass
+
+
+
+url
+#from django.urls import path
+from django.conf.urls import url,include
+from . import views
+
+app_name='webpoll'
+urlpatterns=[
+    # write URL pattern for home page
+    url(r'^$', views.HomeView.as_view(), name='home'),
+    ]
+
+
+
+tests:
+
+from django.test import TestCase
+import datetime
+from django.utils import timezone
+from django.urls import reverse
+
+from .models import question
+
+# Create your tests here.
+class QuestionModelTests(TestCase):
+    def test_question_is_future(self):
+        ''' is_recent should be false for questions published with future date'''
+        time=timezone.now() + datetime.timedelta(days=20)
+        future_question=question(pubdate=time)
+        self.assertIs(future_question.is_recent(), False)
+        
+    def test_question_is_old(self):
+        ''' is_recent should be false for questions published with older date'''
+        time = timezone.now() - datetime.timedelta(days=1,seconds=1)
+        old_question = question(pubdate=time)
+        self.assertIs(old_question.is_recent(),False)
+        
+    def test_question_is_current(self):
+        ''' is_recent should be true for questions published within 1 day'''
+        time = timezone.now() - datetime.timedelta(hours=23, minutes=59, seconds=59)
+        recent_question = question(pubdate=time)
+        self.assertIs(recent_question.is_recent(),True)
+
+def create_question(questionname,days):
+    """
+    Create a question with the given `question_text` and published the
+    given number of `days` offset to now (negative for questions published
+    in the past, positive for questions that have yet to be published).
+    """
+    time=timezone.now() + datetime.timedelta(days=days)
+    return question.objects.create(questionname=questionname,pubdate=time)
+
+class QuestionIndexViewTests(TestCase):
+    def test_no_questions(self):
+        """
+        If no questions exist, an appropriate message is displayed.
+        """
+        response=self.client.get(reverse('webpoll:home'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Questions not available for polling!")
+        self.assertQuerysetEqual(response.context['recent_question_list'], [])
+        
+    def test_past_question(self):
+        """
+        Questions with a pub_date in the past are displayed on the
+        index page.
+        """
+        create_question(questionname="Past question.",days=-30)
+        response=self.client.get(reverse('webpoll:home'))
+        self.assertQuerysetEqual(response.context['recent_question_list'], ['<question: Past question.>'])
+        
+    def test_future_question(self):
+        """
+        Questions with a pub_date in the future aren't displayed on
+        the index page.
+        """
+        create_question(questionname="Future question.", days=30)
+        response=self.client.get(reverse('webpoll:home'))
+        self.assertContains(response, "Questions not available for polling!")
+        self.assertQuerysetEqual(response.context['recent_question_list'], [])
+        
+    def test_past_future_question(self):
+        create_question(questionname="Past question.", days=-30)
+        create_question(questionname="Future question.", days=30)
+        response=self.client.get(reverse('webpoll:home'))
+        self.assertQuerysetEqual(response.context['recent_question_list'], ['<question: Past question.>'])
+        
+    def test_two_questions(self):
+        create_question(questionname="Past question 1.", days=-30)
+        create_question(questionname="Past question 2.", days=-10)
+        response=self.client.get(reverse('webpoll:home'))
+        self.assertQuerysetEqual(response.context['recent_question_list'], ['<question: Past question 2.>', '<question: Past question 1.>'])
+
+======================================================================
+
+FAIL [0.011s]: test_future_question (webpoll.tests.QuestionIndexViewTests)
+
+----------------------------------------------------------------------
+
+Traceback (most recent call last):
+
+  File "/projects/challenge/webpoll/tests.py", line 63, in test_future_question
+
+    self.assertContains(response, "Questions not available for polling!")
+
+  File "/home/user/.local/lib/python2.7/site-packages/django/test/testcases.py", line 393, in assertContains
+
+    self.assertTrue(real_count != 0, msg_prefix + "Couldn't find %s in response" % text_repr)
+
+AssertionError: Couldn't find 'Questions not available for polling!' in response
+
+======================================================================
+
+FAIL [0.002s]: test_past_future_question (webpoll.tests.QuestionIndexViewTests)
+
+----------------------------------------------------------------------
+
+Traceback (most recent call last):
+
+  File "/projects/challenge/webpoll/tests.py", line 70, in test_past_future_question
+
+    self.assertQuerysetEqual(response.context['recent_question_list'], ['<question: Past question.>'])
+
+  File "/home/user/.local/lib/python2.7/site-packages/django/test/testcases.py", line 972, in assertQuerysetEqual
+
+    return self.assertEqual(list(items), values, msg=msg)
+
+AssertionError: Lists differ: ['<question: Future question.>... != ['<question: Past question.>']
+
+First differing element 0:
+
+'<question: Future question.>'
+
+'<question: Past question.>'
+
+First list contains 1 additional elements.
+
+First extra element 1:
+
+'<question: Past question.>'
+
+- ['<question: Future question.>', '<question: Past question.>']
+
++ ['<question: Past question.>']
+
+----------------------------------------------------------------------
+
+Ran 8 tests in 0.023s
+
+FAILED (failures=2)
+
+Generating XML reports...
+
+Creating test database for alias 'default'...
+
+System check identified no issues (0 silenced).
+
+Destroying test database for alias 'default'...
+
+
+
+
+
+ex2:
+url.py
+#from django.urls import path
+from django.conf.urls import url,include
+from . import views
+
+app_name='webpoll'
+urlpatterns=[
+    url(r'^$', views.HomeView.as_view(), name='home'),
+    # URL implementation code 
+    ]
+
+
+home.html
+
+<!DOCTYPE html>
+{% if recent_question_list %}
+    <ul>
+    {% for question in recent_question_list %}
+        <li><a href="{% url 'webpoll:detail' question.id %}">{{ question.questionname }}</a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>Questions not available for polling!</p>
+{% endif %}
+
+
+
+
+
+
+
+ex3:
+views.py
+
+from django.views import generic
+from django.utils import timezone
+
+from .models import question
+
+class HomeView(generic.ListView):
+    template_name='webpoll/home.html'
+    context_object_name='recent_question_list'
+    def get_queryset(self):
+        return question.objects.filter(pubdate__lte=timezone.now()).order_by('-pubdate')[:5]
+
+class QuestionDetailView(generic.DetailView):
+    # write code implementation here
+    model=question
+    template_name='webpoll/question_detail.html'
+    def get_queryset(self):
+        return question.objects.filter(pubdate__lte=timezone.now())
+
+
+question_detail.html
+
+<!DOCTYPE html>
+
+<h2><!-- code to display question name -->{{ question.questionname }}</h2>
+<ul>
+<!-- code to display choice -->
+{% for choice in question.choice_set.all %}
+<label for="choice{{ forloop.counter }}">{{ choice.choicename }}</label><br>
+{% endfor %}
+</ul>
+
+
+home.html
+<!DOCTYPE html>
+{% if recent_question_list %}
+    <ul>
+    {% for question in recent_question_list %}
+        <li><a href="{% url 'webpoll:detail' question.id %}">{{ question.questionname }}</a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>Questions not available for polling!</p>
+{% endif %}
+
+url.py
+
+#from django.urls import path
+from django.conf.urls import url,include
+from . import views
+
+app_name='webpoll'
+urlpatterns=[
+    url(r'^$', views.HomeView.as_view(), name='home'),
+    # URL implementation code 
+    url(r'^(?P<pk>[0-9]+)/$',views.QuestionDetailView.as_view(),name='detail'),
+    ]
+
+ex4:
+
+url.py
+
+from django.conf.urls import url,include
+from . import views
+
+app_name='webpoll'
+urlpatterns=[
+    url(r'^$', views.HomeView.as_view(), name='home'),
+    url(r'^(?P<pk>[0-9]+)/$',views.QuestionDetailView.as_view(),name='detail'),
+    # URL pattern code
+    url(r'^(?P<pk>[0-9]+)/$/vote/', views.vote, name='vote'),
+    ]
+
+question_detail.html
+
+<!DOCTYPE html>
+
+<h2>{{ question.questionname }}</h2>
+
+<!-- code to display error_message -->
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+
+<form>
+
+{% for choice in question.choice_set.all %}
+<!-- code to display choices as radio buttons -->
+<input type="radio" name="choice" id="choice{{ forloop.counter }}" value="{{ choice.id }}">
+        <label for="choice{{ forloop.counter }}">{{ choice.choice_text }}</label><br>
+{% endfor %}
+<input type="submit" value="Submit Vote" />
+</form>
+
+
+views.py
+
+from django.views import generic
+from django.utils import timezone
+from django.shortcuts import get_object_or_404,render
+from django.http import HttpResponse
+
+from .models import question,choice
+
+class HomeView(generic.ListView):
+    template_name='webpoll/home.html'
+    context_object_name='recent_question_list'
+    def get_queryset(self):
+        return question.objects.filter(pubdate__lte=timezone.now()).order_by('-pubdate')[:6]
+
+class QuestionDetailView(generic.DetailView):
+    model=question
+    template_name='webpoll/question_detail.html'
+    def get_queryset(self):
+        return question.objects.filter(pubdate__lte=timezone.now())
+
+def vote(request, question_id):
+    # get question object
+    questions = get_object_or_404(question, pk=question_id)
+    try:
+        selected_choice = questions.choice_set.get(pk=request.POST['choice'])
+        # get the choice
+    except(KeyError, choice.DoesNotExist):
+        return render(request, 'webpoll/question_detail.html', {
+            'question': questions,
+            'error_message': "You didn't select a choice.",
+        })
+        # error code
+    else:
+        selected_choice.votes += 1
+        selected_choice.save()
+        # Always return an HttpResponseRedirect after successfully dealing
+        # with POST data. This prevents data from being posted twice if a
+        # user hits the Back button.
+        
+        # add votes to the choice and return response
+        return HttpResponse(questions.questionname, selected_choice )
+
+
+
+
+
+ex5:
+url.py
+#from django.urls import path
+from django.conf.urls import url,include
+from . import views
+
+app_name='webpoll'
+urlpatterns=[
+    url(r'^$', views.HomeView.as_view(), name='home'),
+    url(r'^(?P<pk>[0-9]+)/$',views.QuestionDetailView.as_view(),name='detail'),
+    url(r'^(?P<question_id>[0-9]+)/vote/$', views.vote, name='vote'),
+    url(r'^(?P<question_id>[0-9]+)/results/', views.VoteResultView.as_view(), name='results'),
+    # URL implementation here
+    ]
+
+
+
+views.py
+from django.views import generic
+from django.utils import timezone
+from django.shortcuts import get_object_or_404,render
+from django.http import HttpResponse, HttpResponseRedirect
+from django.urls import reverse
+
+from .models import question,choice
+
+class HomeView(generic.ListView):
+    template_name='webpoll/home.html'
+    context_object_name='recent_question_list'
+    def get_queryset(self):
+        return question.objects.filter(pubdate__lte=timezone.now()).order_by('-pubdate')[:6]
+
+class QuestionDetailView(generic.DetailView):
+    model=question
+    template_name='webpoll/question_detail.html'
+    def get_queryset(self):
+        return question.objects.filter(pubdate__lte=timezone.now())
+
+def vote(request, question_id):
+    quest=get_object_or_404(question,pk=question_id)
+    try:
+        selected_choice = quest.choice_set.get(pk=request.POST['choice'])
+    
+    except (KeyError, choice.DoesNotExist):
+        return render(request, 'webpoll/question_detail.html', {
+            'question':quest,
+            'error_message':"You didn't select a choice",
+            })
+    else:
+        selected_choice.vote+=1
+        selected_choice.save()
+        return HttpResponseRedirect(reverse('webpoll:result',args=(question_id,)))
+    
+# VoteResultView implementation here
+class VoteResultView(generic.DetailView):
+    model = question
+    template_name = 'webpoll/view_result.html'
+    
+
+view_result.html
+<!DOCTYPE html>
+
+<h2><!-- code display question -->{{ question.questionname }}</h2>
+<ul>
+<!-- code to display choice with voting results -->
+{% for choice in question.choice_set.all %}
+    <li>{{ choice.choicename }} -- {{ choice.votes }} vote{{ choice.votes|pluralize }}</li>
+{% endfor %}
+</ul>
+
+<!-- code to vote again -->
+<a href="{% url 'webpoll:detail' question.id %}">Vote again?</a>
+
+
+
+ex6: model test
+
+
+

@@ -1,0 +1,146 @@
+models.py
+
+from django.db import models
+
+# Create your models here.
+class Category(models.Model):
+    cat_name = models.TextField(max_length=100)
+    TYPES = (
+        ('D', 'Digital'),
+        ('N', 'Non-Digital'),
+    )
+    cat_type = models.TextField(max_length=1, choices=TYPES)
+    STATUS = (
+        ('A','Active'),
+        ('I','Inactive'),
+    )
+    cat_status = models.TextField(max_length=1, choices=STATUS)
+    
+    def __str__(self):
+        return self.cat_name
+
+
+class Course(models.Model):
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    crs_name = models.TextField(max_length=100)
+    STATUS = (
+        ('A','Active'),
+        ('I','Inactive'),
+    )
+    crs_status = models.TextField(max_length=1, choices=STATUS)
+    crs_description = models.TextField(max_length=500)
+    crs_duration = models.IntegerField()
+    crs_miles = models.IntegerField()
+
+    def __str__(self):
+        return self.crs_name
+
+
+class Associate(models.Model):
+    course = models.ManyToManyField(Course)
+    name = models.TextField(max_length=100)
+    email = models.EmailField(default=None)
+    miles_earned = models.IntegerField(default=0)
+
+    def __str__(self):
+        return self.name
+
+
+
+class Manager(models.Model):
+    associate = models.OneToOneField(
+        Associate,
+       
+        primary_key=True,
+        on_delete=models.CASCADE,
+    )
+    is_scrum_master = models.BooleanField(default=False)
+    associate_count = models.IntegerField()
+    
+    def __str__(self):
+        return self.associate.name
+
+
+
+
+shell:
+
+from play.models import Category
+cat=Category(cat_name='Modern Web Development',cat_type='D',cat_status='A')
+cat.save()
+cat.cat_type
+cat.get_cat_status_display()
+
+cat1=Category.objects.create(cat_name='Blockchain',cat_type='D', cat_status='I')
+cat1.save()
+
+Category.objects.values()
+
+
+
+from play.models import Category
+cat=Category(cat_name='Digital',cat_type='D',cat_status='A')
+cat.save()
+
+
+from play.models import Course, Associate, Manager
+react=Course(category=cat,crs_name='ReactJS',crs_status = 'A',crs_description="Course on React JS",crs_duration=100,crs_miles=100)
+angular=Course(category=cat,crs_name='AngularJS',crs_status = 'A',crs_description="Course on Angular JS",crs_duration=100,crs_miles=120)
+backbone=Course(category=cat,crs_name='BackboneJS',crs_status = 'A',crs_description="Course on Backbone JS",crs_duration=90,crs_miles=100)
+
+
+Course.objects.all()
+
+angular.save()
+react.save()
+backbone.save()
+
+Course.objects.all()
+
+
+Course.objects.values()
+
+chester=Associate(name='Chester Benington',email="chester.benington@tcs.com",miles_earned=200)
+mike=Associate(name='Mike Shinoda',email="mike.shinoda@tcs.com",miles_earned=220)
+joe=Associate(name='Joe Hahn',email="joe.hahn@tcs.com",miles_earned=220)
+rob=Associate(name='rob Bourdon',email="rob.bourdon@tcs.com",miles_earned=320)
+
+
+
+chester.save()
+mike.save()
+joe.save()
+rob.save()
+
+
+chester.course.add(react,backbone)
+mike.course.add(angular,react)
+joe.course.add(angular,backbone)
+rob.course.add(react,angular, backbone)
+
+
+Associate.objects.all()
+Associate.objects.values()
+
+
+Associate.objects.filter(course__crs_name="ReactJS")
+
+Course.objects.filter(associate__name__contains="Chester")
+
+mgr1=Manager(associate=rob,is_scrum_master=True,associate_count=3)
+mgr1.save()
+
+mgr1.associate
+
+rob.manager
+
+hasattr(mike, 'manager')
+
+mgr1.associate = mike
+mgr1.save()
+
+hasattr(mike, 'manager')
+
+Manager.objects.all()
+
+sqlite3 db.sqlite3 'select * from play_category'

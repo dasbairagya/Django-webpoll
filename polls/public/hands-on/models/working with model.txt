@@ -1,0 +1,161 @@
+from django.db import models
+
+
+
+# Create Category Model here
+class Category(models.Model):
+    cat_name = models.TextField(max_length=100)
+    TYPES = (('D', 'Digital'),('N', 'Non-Digital'),)
+    cat_type = models.TextField(max_length=1, choices=TYPES)
+    STATUS = (('A','Active'),('I','Inactive'),)
+    cat_status = models.TextField(max_length=1, choices=STATUS)
+    
+    def __str__(self):
+        return self.cat_name
+
+
+
+# Create Course Model here
+class Course(models.Model):
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    crs_name = models.TextField(max_length=100)
+    STATUS = (('A','Active'),('I','Inactive'),)
+    crs_status = models.TextField(max_length=1, choices=STATUS)
+    crs_description = models.TextField(max_length=500)
+    crs_duration = models.IntegerField()
+    crs_miles = models.IntegerField()
+    
+    def __str__(self):
+        return self.crs_name
+
+
+
+
+
+
+----------------------------
+
+    'play.apps.PlayConfig',
+    'talk.apps.TalkConfig',
+
+
+play.model
+
+from django.db import models
+
+
+
+# Create Category Model here
+class Category(models.Model):
+    cat_name = models.TextField(max_length=100)
+    TYPES = (('D', 'Digital'),('N', 'Non-Digital'),)
+    cat_type = models.TextField(max_length=1, choices=TYPES)
+    STATUS = (('A','Active'),('I','Inactive'),)
+    cat_status = models.TextField(max_length=1, choices=STATUS)
+    
+    def __str__(self):
+        return self.cat_name
+
+
+
+# Create Course Model here
+class Course(models.Model):
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    crs_name = models.TextField(max_length=100)
+    STATUS = (('A','Active'),('I','Inactive'),)
+    crs_status = models.TextField(max_length=1, choices=STATUS)
+    crs_description = models.TextField(max_length=500)
+    crs_duration = models.IntegerField()
+    crs_miles = models.IntegerField()
+    
+    def __str__(self):
+        return self.crs_name
+
+	
+
+
+talk.mpdel
+
+from django.db import models
+
+# Create your models here.
+class Person(models.Model):
+    name = models.TextField(max_length=100)
+    email = models.EmailField(default=None)
+
+    @classmethod
+    def create_pers(cls,name,email):
+        pers=cls(name=name,email=email)
+        return pers
+
+class Botmanager(models.Manager):
+    def create_bot(self,botname,botpurpose):
+        botmgr=self.create(botname=botname,botpurpose=botpurpose)
+        return botmgr
+
+class Bots(models.Model):
+    botname=models.TextField(max_length=100)
+    botpurpose=models.TextField(max_length=100)
+    botobj=Botmanager()
+
+
+
+
+pyhon shell
+
+from play.models import Course, Category
+cat=Category(cat_name='Modern Web Development',cat_type='D',cat_status='A')
+cat.save()
+
+react=Course(category=cat,crs_name='ReactJS',crs_status = 'A',crs_description="Course on React JS",crs_duration=100,crs_miles=100)
+angular=Course(category=cat,crs_name='AngularJS',crs_status = 'A',crs_description="Course on Angular JS",crs_duration=100,crs_miles=120)
+backbone=Course(category=cat,crs_name='BackboneJS',crs_status = 'A',crs_description="Course on Backbone JS",crs_duration=90,crs_miles=100)
+angular.save()
+react.save()
+backbone.save()
+
+
+blkchn=Category.objects.create(cat_name='Blockchain',cat_type='D', cat_status='I')
+blkchn.save()
+
+blkchn.id
+
+myobj=Category.objects.last()
+
+myobj.cat_name
+
+
+del myobj
+myobj.cat_name
+
+myobj=Category.objects.last()
+
+del myobj.cat_name
+myobj.cat_name
+
+blkchn.cat_status
+myobj.cat_status
+
+myobj.cat_status='A'
+myobj.save(update_fields=['cat_status'])
+
+blkchn.cat_status
+myobj.cat_status
+Category.objects.values()
+
+
+
+--------
+
+
+from talk.models import Person, Bots
+
+pers1 = Person.create_pers("My name","my.name@tcs.com")
+pers1.save()
+
+bot1=Bots.botobj.create_bot("okto","generic")
+bot1.save()
+
+
+pers1.name,pers1.email
+bot1.botname,bot1.botpurpose
